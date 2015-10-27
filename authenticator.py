@@ -42,7 +42,9 @@ class authenticator:
 	def GPIOprep(self):	# preps all needed GPIO on the Pi
 		GPIO.setmode(GPIO.BCM)	# set up GPIO pins
 		GPIO.setwarnings(False)	# disable GPIO warnings
-		GPIO.setup(self.led, GPIO.OUT)	# set the LED port to output
+		GPIO.setup(self.greenLED, GPIO.OUT)	# set the LED port to output
+		GPIO.setup(self.blueLED, GPIO.OUT)	# set the LED port to output
+		GPIO.setup(self.redLED, GPIO.OUT)	# set the LED port to output
 
 	# def keypadResult:
 		# check GPIO ports for input character, and get them one at a time
