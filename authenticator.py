@@ -10,12 +10,12 @@ def signal_handler(signal, frame):	# a function to handle keyboard interrupts (h
 	sys.exit(0)	# gracefully exit the current program
 
 class authenticator:
-	FULL_MEMBER = 'Dues Paid and Agreement Signed'	# constant used for access denial
-	PAY_DUES = 'Student Needs to Pay Dues'	# constant used for standard entry
-	AGREEMENT_NEEDED = 'Member Needs to Sign the Agreement'	# constant used for administrative access
-	greenLED = 3	# defines GPIO port 3 for the LED 
-	blueLED = 5		# defines GPIO port 5 for the LED 
-	redLED = 7		# defines GPIO port 7 for the LED 
+	FULL_MEMBER = 'Dues Paid and Agreement Signed'	# constant used for full member status
+	PAY_DUES = 'Student Needs to Pay Dues'	# constant used for students needing to pay dues
+	AGREEMENT_NEEDED = 'Member Needs to Sign the Agreement'	# constant used for members needing to sign the club agreement
+	greenLED = 3	# defines GPIO port 3 for the LED
+	blueLED = 5		# defines GPIO port 5 for the LED
+	redLED = 7		# defines GPIO port 7 for the LED
 
 	def cleanInput(self, cardID):	# cleans the input provided by the card reader
 		cleanID = cardID[1:3] + '-'	# grab digits 1 to 2 of the card input (base 0)
@@ -23,21 +23,21 @@ class authenticator:
 		cleanID += cardID[6:10]	# append digits 6 to 9 of the card input onto the sanitized input
 		return cleanID	# return the sanitized student ID in the form of **-***-****
 
-	def cardAuthCheck(self, sanitizedCardID):	# verifies whether or not swipped user is allowed entry
-		authFile = file('id_data.txt')	# pulls authorized users from id_data.txt
-		superFile = file('super_data.txt')	# pulls super users from super_data.txt
-		accessAllowed = self.ACCESS_DENIED	# automatically sets access to 'Denied'
-		for line in authFile:	# for every student ID listed in id_data.txt
+	def cardAuthCheck(self, sanitizedCardID):	# checks the membership status of the swiping student
+		nonAgreement = file('needs_agreement.txt')	# pulls members who haven't signed agreements from needs_agreement.txt
+		membersFile = file('full_member.txt')	# pulls full members from full_member.txt
+		needsDues = self.PAY_DUES	# automatically sets status to 'Student Needs to Pay Dues'
+		for line in membersFile:	# for every student ID listed in full_member.txt
 			if sanitizedCardID in line:	# if the provided input is the ID on the current line
-				accessAllowed = self.ACCESS_GRANTED	# set access to 'Granted'
-		for line in superFile:	# for every user ID listed in super_data.txt
-			if sanitizedCardID in line:	# if the provided input is the ID on the current line
-				accessAllowed = self.ADMIN_ACCESS	# set access to 'Admin Use'
-		return accessAllowed	# return the swipper's access level
+				needsDues = self.FULL_MEMBER	# set status to 'Dues Paid and Agreement Signed'
+		for line in superFile:	# for every user ID listed in needs_agreement.txt
+			if nonAgreement in line:	# if the provided input is the ID on the current line
+				needsDues = self.AGREEMENT_NEEDED	# set status to 'Member Needs to Sign the Agreement'
+		return needsDues	# return the swipper's club status
 
-	def swipeLog(self, userID, authAccessCode):	# logs the card swipe to the system logs
+	def swipeLog(self, userID, userStatus):	# logs the card swipe to the system logs
 		currentTime = time.strftime('%H:%M:%S')	# grabs the current date
-		logging.info('Swipe attempt by ' + userID + '. User access: ' + authAccessCode)	# log the time, user ID, and auth result to log.txt
+		logging.info('Swipe attempt by ' + userID + '. User status: ' + userStatus)	# log the time, user ID, and auth result to log.txt
 
 	def GPIOprep(self):	# preps all needed GPIO on the Pi
 		GPIO.setmode(GPIO.BCM)	# set up GPIO pins
